@@ -303,6 +303,54 @@ func TestCreateProviderFromConfig_EmptyModel(t *testing.T) {
 	}
 }
 
+func TestCreateProviderFromConfig_SiliconFlow(t *testing.T) {
+	cfg := &config.ModelConfig{
+		ModelName: "test-siliconflow",
+		Model:     "siliconflow/deepseek-ai/DeepSeek-V3",
+		APIKey:    "test-key",
+		APIBase:   "https://api.siliconflow.cn/v1",
+	}
+
+	provider, modelID, err := CreateProviderFromConfig(cfg)
+	if err != nil {
+		t.Fatalf("CreateProviderFromConfig() error = %v", err)
+	}
+	if provider == nil {
+		t.Fatal("CreateProviderFromConfig() returned nil provider")
+	}
+	if modelID != "deepseek-ai/DeepSeek-V3" {
+		t.Errorf("modelID = %q, want %q", modelID, "deepseek-ai/DeepSeek-V3")
+	}
+	if _, ok := provider.(*HTTPProvider); !ok {
+		t.Fatalf("expected *HTTPProvider, got %T", provider)
+	}
+}
+
+func TestCreateProviderFromConfig_SiliconFlow_DefaultAPIBase(t *testing.T) {
+	cfg := &config.ModelConfig{
+		ModelName: "test-siliconflow-default",
+		Model:     "siliconflow/Qwen/Qwen2.5-72B-Instruct",
+		APIKey:    "test-key",
+	}
+
+	provider, modelID, err := CreateProviderFromConfig(cfg)
+	if err != nil {
+		t.Fatalf("CreateProviderFromConfig() error = %v", err)
+	}
+	if provider == nil {
+		t.Fatal("CreateProviderFromConfig() returned nil provider")
+	}
+	if modelID != "Qwen/Qwen2.5-72B-Instruct" {
+		t.Errorf("modelID = %q, want %q", modelID, "Qwen/Qwen2.5-72B-Instruct")
+	}
+}
+
+func TestGetDefaultAPIBase_SiliconFlow(t *testing.T) {
+	if got := getDefaultAPIBase("siliconflow"); got != "https://api.siliconflow.cn/v1" {
+		t.Fatalf("getDefaultAPIBase(%q) = %q, want %q", "siliconflow", got, "https://api.siliconflow.cn/v1")
+	}
+}
+
 func TestCreateProviderFromConfig_RequestTimeoutPropagation(t *testing.T) {
 	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		time.Sleep(1500 * time.Millisecond)
